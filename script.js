@@ -33,7 +33,7 @@ function init() {
   init_keywords();
 
   // Load script into textarea
-  $.get("script.js", function(data){
+  $.get("example.txt", function(data){
     $editable.innerHTML = data;
     $editable.focus();
     update();
@@ -65,7 +65,7 @@ function update() {
     // Restore cursor position
     setSelectionRange($editable, pos, pos);
 
-  }, 300);
+  }, 60);
 }
 
 // ==============================
@@ -168,27 +168,7 @@ function replace_tokens(match, p1, p2, p3, offset, string) {
 }
 
 function replace_variables (match, p1, p2, p3, offset, string) {
-  var contrast = 0.6;
-  var hue = 0;
-  var sat = 30;
-  var lightness = 50;
-  var alpha = 1;
-
-  var letters = p2.toLowerCase().split("");
-  var len = letters.length;
-  var letter_range = 26;
-
-  console.log(p2);
-
-  for (var j = 0; j < len; j++) {
-    var precision = Math.pow(contrast,j);
-
-    var letter_position = (p2.charCodeAt(j) - "a".charCodeAt(0)) / letter_range;
-
-    hue = (hue + 360*precision * (letter_position - 0.5)).mod(360);
-  }
-  
-  return p1 + "<i style='font-weight:600;color:hsla(" + Math.floor(hue) + ", " + sat + "%, " + lightness + "%, " + alpha + ")'>" + p2 + "</i>";
+  return p1 + "<i style='font-weight:600;color:" + variable_color(p2) + "'>" + p2 + "</i>";
 }
 
 // ==============================
@@ -329,4 +309,38 @@ function setSelectionRange(el, start, end) {
 // From: http://javascript.about.com/od/problemsolving/a/modulobug.htm
 Number.prototype.mod = function(n) {
   return ((this%n)+n)%n;
+}
+
+function variable_color(name) {
+  var contrast = 0.9;
+  // Make this >1 for COLOR XPLOSION
+
+  var hue = 0;
+  var sat = 30;
+  var lightness = 50;
+  var alpha = 1;
+
+  var letters = name.toLowerCase().split("");
+  var len = letters.length;
+
+  for (var j = 0; j < len; j++) {
+    // We're running through the characters of the variable name, and
+    // adjusting the hue based on the position in the alphabet of that
+    // letter. 
+
+    // The fraction of the color range we're adjusting over. 
+    // so if this is '0.5', the color can vary over 180.
+    var precision = Math.pow(contrast,j);
+
+    // Fraction of the position of this letter in the alphabet, so 
+    // 'a' is 0 and 'z' is 1.
+    var letter_position = (name.charCodeAt(j) - "a".charCodeAt(0)) / 26;
+
+    // `(letter_position - 0.5)` so we can move backwards in the color
+    // wheel as well
+    // `mod(360)` to make sure we're staying inside the wheel.
+    hue = (hue + 360*precision * (letter_position - 0.5)).mod(360);
+  }
+  
+  return "hsla(" + Math.floor(hue) + ", " + sat + "%, " + lightness + "%, " + alpha + ")";
 }
