@@ -1,0 +1,68 @@
+// After reading [Evan Brooks' article](https://medium.com/p/3a6db2743a1e) 
+// on an alternative way to do syntax highlighting, I thought it would
+// be pretty awesome if, with a system like this, the colors of the 
+// variables you're writing would shift gradually to the color of the 
+// variable you want to type.
+
+// So I modified the coloring algorithm a bit to get this working. 
+// It's definitely not perfect, but interesting nonetheless.
+
+
+// Let's say you have the following code:
+var unicorn = new Unicorn();
+
+// If you try to type `unicorn` again, you'll see the color of your 
+// variable gradually 'fine-tunes' itself. It's never been so 
+// satisfying to type code! 
+
+// If we would have made a typo, we'll see it immediately while typing:
+unic
+ubic // that doesn't look right, does it?
+
+
+// The algorithm we're using to decide the color is completely based 
+// on which letters are in your variable name. 
+// This means that colors will be consistent across files.
+
+// This also has disadvantages though--because it's based on the 
+// position of letters in the alphabet, variables with alike names 
+// will have alike colors: 
+killAllEvil();
+killAllHumans();
+
+
+
+// ==================================================================
+
+// And here's the code that calculates the variable's color:
+function variable_color(name) {
+  var contrast = 0.9; // Make this >1 for COLOR EXPLOSION
+  var hue = 0;
+  var sat = 30;
+  var lightness = 50;
+  var alpha = 1;
+
+  var letters = name.toLowerCase().split("");
+  var len = letters.length;
+
+  for (var j = 0; j < len; j++) {
+    // We're running through the characters of the variable name, and
+    // adjusting the hue based on the position in the alphabet of that
+    // letter. 
+
+    // The fraction of the color range we're adjusting over. 
+    // so if this is '0.5', the color can vary over 180.
+    var precision = Math.pow(contrast,j);
+
+    // Fraction of the position of this letter in the alphabet, so 
+    // 'a' is 0 and 'z' is 1.
+    var letter_position = (name.charCodeAt(j) - "a".charCodeAt(0)) / 26;
+
+    // `(letter_position - 0.5)` so we can move backwards in the color
+    // wheel as well
+    // `mod(360)` to make sure we're staying inside the wheel.
+    hue = (hue + 360*precision * (letter_position - 0.5)).mod(360);
+  }
+  
+  return "hsla(" + Math.floor(hue) + ", " + sat + "%, " + lightness + "%, " + alpha + ")";
+}
