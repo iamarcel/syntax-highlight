@@ -83,9 +83,9 @@ function process(string) {
 
   html = html
           .replace(rx_strings, replace_rx_strings)
-          .replace(rx_tokens, replace_tokens)
+          .replace(rx_tokens, replace_variables)
           .replace(rx_comments, replace_rx_comments)
-          .replace(rx_numbers, replace_rx_numbers)
+          //.replace(rx_numbers, replace_rx_numbers)
           .replace(rx_colors, replace_rx_colors)
           ;
 
@@ -99,25 +99,9 @@ function assign_colors(string) {
 
   var split = string.split(rx_splitters);
 
-  var old_colors = token_colors;
   token_colors = get_uniques(split);
-  tokens = Object.keys(token_colors).sort();
+  tokens = Object.keys(token_colors);
 
-  var len = tokens.length;
-
-  for (var i = 0; i < len; i++) {
-
-    var percent = i / len;
-    var index = parseInt( (percent * 132) + (Math.random() * 0) );
-
-    if (index < 0) index = 0;
-    else if (index > 99) index = index - 99;
-    else if (index > 66) index = index - 66;
-    else if (index > 33) index = index - 33;
-
-    var color = "var" + index;
-    token_colors[tokens[i]] = color;
-  }
 }
 
 
@@ -181,6 +165,30 @@ function replace_rx_numbers(match, p1, p2, p3, offset, string) {
 function replace_tokens(match, p1, p2, p3, offset, string) {
   var colorclass = token_colors[p2];
   return p1 + "<i class='" + colorclass + "'>" + p2 + "</i>";
+}
+
+function replace_variables (match, p1, p2, p3, offset, string) {
+  var contrast = 0.6;
+  var hue = 0;
+  var sat = 30;
+  var lightness = 50;
+  var alpha = 1;
+
+  var letters = p2.toLowerCase().split("");
+  var len = letters.length;
+  var letter_range = 26;
+
+  console.log(p2);
+
+  for (var j = 0; j < len; j++) {
+    var precision = Math.pow(contrast,j);
+
+    var letter_position = (p2.charCodeAt(j) - "a".charCodeAt(0)) / letter_range;
+
+    hue = (hue + 360*precision * (letter_position - 0.5)).mod(360);
+  }
+  
+  return p1 + "<i style='font-weight:600;color:hsla(" + Math.floor(hue) + ", " + sat + "%, " + lightness + "%, " + alpha + ")'>" + p2 + "</i>";
 }
 
 // ==============================
@@ -316,4 +324,9 @@ function setSelectionRange(el, start, end) {
         textRange.moveStart("character", start);
         textRange.select();
     }
+}
+
+// From: http://javascript.about.com/od/problemsolving/a/modulobug.htm
+Number.prototype.mod = function(n) {
+  return ((this%n)+n)%n;
 }
